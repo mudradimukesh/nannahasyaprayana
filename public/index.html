@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Drag and Drop Image Upload with Feature Extraction</title>
+    <style>
+        /* Same styles as before */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #dropArea {
+            width: 100%;
+            height: 50px; /* Reduced height to half */
+            border: 2px dashed #aaa;
+            border-radius: 10px;
+            text-align: center;
+            line-height: 50px; /* Adjusted line height to match the new height */
+            font-size: 16px; /* Optionally reduce font size */
+            color: #aaa;
+            margin-bottom: 20px;
+            transition: border-color 0.3s, color 0.3s;
+        }
+        #dropArea.hover {
+            border-color: #333;
+            color: #333;
+        }
+        #gallery {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .image-container {
+            position: relative;
+            margin: 5px;
+        }
+        .image-container img {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .feature-info {
+            margin-top: 20px;
+        }
+        .feature-info p {
+            display: flex;
+            align-items: center;
+        }
+        /* New styles for generated images grid */
+        #generatedImages {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        .generated-image-container {
+            margin: 10px;
+            text-align: center;
+        }
+        .generated-image-container img {
+            width: 200px;
+            height: 200px;
+            object-fit: contain;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .model-name {
+            margin-top: 5px;
+            font-weight: bold;
+        }
+        /* Loading overlay styles */
+        #loadingOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            visibility: hidden;
+        }
+        #loadingOverlay.visible {
+            visibility: visible;
+        }
+        .spinner {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #333;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        }
+  
+        /* Error message styles */
+        .error-message {
+            color: red;
+        }
+        /* Journal Entry Text Area Styles */
+        #journalEntry {
+            width: 100%; /* Full width */
+            height: 100px; /* Height of the text area */
+            margin-top: 10px; /* Space above the text area */
+            padding: 10px; /* Padding inside the text area */
+            border: 1px solid #ccc; /* Border style */
+            border-radius: 5px; /* Rounded corners */
+            font-size: 16px; /* Font size */
+            resize: vertical; /* Allow vertical resizing */
+        }
+        /* Dropdown for Model Selection */
+        #modelSelect {
+            margin-left: 5px; /* Space between the dropdown and the button */
+            padding: 5px; /* Padding inside the dropdown */
+            font-size: 16px; /* Font size */
+        }
+        /* Stickers Section Styles */
+        #stickersSection {
+            margin-top: 20px;
+        }
+        .sticker-container {
+            display: inline-block;
+            margin: 10px;
+            text-align: center;
+        }
+        .sticker {
+            width: 100px;
+            height: 100px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        /* Basic styles for visibility */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Drag and Drop Image Upload with Feature Extraction</h1>
+
+<div id="dropArea">Drag and drop images here</div>
+
+<button id="extractFeaturesBtn">Extract Features</button>
+
+<div id="gallery"></div>
+
+<!-- Journal Entry Section -->
+<div>
+    <label for="journalEntry">Journal Entry:</label>
+    <textarea id="journalEntry" value="I feel grateful for" rows="4" cols="50" placeholder="Write your journal entry here..."></textarea>
+</div>
+
+<!-- Create Comic Button and Dropdown for Model Selection -->
+<div style="display: flex; align-items: center; margin-top: 10px;">
+    <button id="createComicBtn">Create Comic</button>
+
+    <label for="modelSelect" style="margin-left: 10px;">Select Model:</label>
+    <select id="modelSelect" style="margin-left: 5px;">
+        <option value="flux-pro">flux-pro</option>
+        <option value="sdxl">sdxl</option>
+        <option value="DreamShaper">DreamShaper</option>
+        <option value="openjourney">openjourney</option>
+        <option value="Kandinsky 2">Kandinsky 2</option>
+    </select>
+
+    <!-- New Dropdown for Style Selection -->
+    <label for="styleSelect" style="margin-left: 10px;">Select Style:</label>
+    <select id="styleSelect" style="margin-left: 5px;">
+        <option value="Surrealist">Surrealist</option>
+        <option value="Fantasy">Fantasy</option>
+        <option value="Manga">Manga</option>
+        <option value="Noir or Dark Style">Noir or Dark Style</option>
+        <option value="Clear Line Style">Clear Line Style</option>
+        <option value="Minimalist/Underground">Minimalist or Underground</option>
+    </select>
+</div>
+
+<!-- Loading overlay -->
+<div id="loadingOverlay">
+    <div class="spinner"></div>
+</div>
+
+<div id="featureInfo"></div>
+
+<!-- Section to Display the Generated Story -->
+<div id="generatedStory" style="margin-top: 20px;">
+    <h2>Generated Comic Story:</h2>
+    <div id="storyContent"></div>
+</div>
+
+<!-- Section to Display the Generated Images -->
+<div id="generatedImages"></div>
+
+<!-- Stickers Section -->
+<div id="stickersSection">
+    <h2>Generated Stickers:</h2>
+    <div id="stickersContainer"></div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const dropArea = document.getElementById('dropArea');
+        const gallery = document.getElementById('gallery');
+        const extractFeaturesBtn = document.getElementById('extractFeaturesBtn');
+        const featureInfo = document.getElementById('featureInfo');
+        const generatedImagesDiv = document.getElementById('generatedImages');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const stickersContainer = document.getElementById('stickersContainer');
+
+        let uploadedImages = []; // Array to store image elements and data URLs
+        let refinedPrompt = ''; // Variable to store the refined prompt from feature extraction
+
+        // Prevent default behaviors
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        // Highlight drop area when item is dragged over it
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            dropArea.classList.add('hover');
+        }
+
+        function unhighlight(e) {
+            dropArea.classList.remove('hover');
+        }
+
+        // Handle dropped files
+        dropArea.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            let dt = e.dataTransfer;
+            let files = dt.files;
+            handleFiles(files);
+        }
+
+        function handleFiles(files) {
+            files = [...files];
+            files.forEach(previewFile);
+        }
+
+        function previewFile(file) {
+            if (!file.type.startsWith('image/')) {
+                alert('Only image files are allowed!');
+                return;
+            }
+
+            let reader = new FileReader();
+            reader.readAsDataURL(file);
+
+            reader.onloadend = function() {
+                let img = document.createElement('img');
+                img.src = reader.result;
+
+                let imgContainer = document.createElement('div');
+                imgContainer.classList.add('image-container');
+                imgContainer.appendChild(img);
+
+                gallery.appendChild(imgContainer);
+
+                uploadedImages.push({
+                    element: img,
+                    dataURL: reader.result,
+                    file: file
+                });
+            }
+        }
+
+        function showLoading() {
+            loadingOverlay.classList.add('visible');
+        }
+
+        function hideLoading() {
+            loadingOverlay.classList.remove('visible');
+        }
+
+        async function extractFeatures() {
+            if (uploadedImages.length === 0) {
+                alert('Please upload at least one image.');
+                return;
+            }
+
+            featureInfo.innerHTML = ''; // Clear previous info
+            generatedImagesDiv.innerHTML = ''; // Clear previous generated images
+
+            showLoading();
+
+            for (let i = 0; i < uploadedImages.length; i++) {
+                let imgData = uploadedImages[i];
+
+                try {
+                    const response = await fetch('/predict', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ imageData: imgData.dataURL })
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        // Store the refined prompt for later use
+                        refinedPrompt = result.refinedPrompt;
+
+                        // Display the optimized prompt
+                        let promptInfo = document.createElement('p');
+                        promptInfo.textContent = `Optimized Prompt: ${result.refinedPrompt}`;
+                        featureInfo.appendChild(promptInfo);
+
+                    } else {
+                        throw new Error(result.error);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    let errorInfo = document.createElement('p');
+                    errorInfo.classList.add('error-message');
+                    errorInfo.textContent = `Image ${i + 1} - Error: ${error.message}`;
+                    featureInfo.appendChild(errorInfo);
+                }
+            }
+
+            hideLoading();
+        }
+
+        extractFeaturesBtn.addEventListener('click', extractFeatures);
+
+        document.getElementById('createComicBtn').addEventListener('click', async () => {
+            const journalEntry = document.getElementById('journalEntry').value;
+            const selectedModel = document.getElementById('modelSelect').value; // Get the selected model
+            const selectedStyle = document.getElementById('styleSelect').value; // Get the selected style
+
+            if (!journalEntry) {
+                alert('Please enter your journal entry.');
+                return;
+            }
+
+            // Show loading indicator
+            showLoading();
+
+            try {
+                const response = await fetch('/generate-comic', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        journalEntry: journalEntry,
+                        refinedPrompt: refinedPrompt, // Use the stored refined prompt
+                        selectedModel: selectedModel, // Send the selected model
+                        selectedStyle: selectedStyle // Send the selected style
+                    })
+                });
+
+                const result = await response.json();
+
+                // Hide loading indicator
+                hideLoading();
+
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+
+                // Display the generated story
+                displayGeneratedStory(result.comicStory);
+
+                // Display the generated images
+                displayGeneratedImages(result.imageUrls);
+
+                // Display the generated stickers and apply CSS animations
+                displayGeneratedStickers(result.stickers);
+
+            } catch (error) {
+                console.error('Error creating comic:', error);
+                alert('Error creating comic: ' + error.message);
+                // Hide loading indicator in case of error
+                hideLoading();
+            }
+        });
+
+        // Function to display the generated story
+        function displayGeneratedStory(story) {
+            const storyContent = document.getElementById('storyContent');
+            storyContent.innerHTML = ''; // Clear previous story
+
+            story.forEach(panel => {
+                let panelDiv = document.createElement('div');
+                panelDiv.textContent = `Panel ${panel.panel}: ${panel.description}`;
+                storyContent.appendChild(panelDiv);
+            });
+        }
+
+        // Function to display the generated images
+        function displayGeneratedImages(imageUrls) {
+            const imagesContainer = document.getElementById('generatedImages');
+            imagesContainer.innerHTML = ''; // Clear previous images
+
+            // Check if imageUrls is defined and is an array
+            if (!Array.isArray(imageUrls)) {
+                console.error('No images to display or invalid format:', imageUrls);
+                return; // Exit if there are no images
+            }
+
+            imageUrls.forEach(url => {
+                console.log('Image URL:', url); // Log the image URL for debugging
+
+                let container = document.createElement('div');
+                container.classList.add('generated-image-container');
+
+                const imgElement = document.createElement('img');
+                imgElement.src = url; // Set the image source
+                imgElement.alt = 'Generated Image'; // Alt text for the image
+
+                container.appendChild(imgElement);
+                imagesContainer.appendChild(container);
+            });
+        }
+
+        // Function to display generated stickers and apply CSS animations
+      // Function to display generated stickers and apply CSS animations
+      function displayGeneratedStickers(stickers) {
+    // Remove previous stickers
+    const previousStickers = document.querySelectorAll('.sticker-container');
+    previousStickers.forEach(sticker => sticker.remove());
+
+    const existingPositions = [];
+    const stickerWidth = 50; // Sticker width in pixels
+    const stickerHeight = 50; // Sticker height in pixels
+
+    stickers.forEach(sticker => {
+        let stickerDiv = document.createElement('div');
+        stickerDiv.classList.add('sticker-container');
+
+        // Set position to absolute for random placement
+        stickerDiv.style.position = 'absolute';
+        stickerDiv.style.zIndex = 1000; // Ensure it's on top
+
+        // Generate a random position that doesn't overlap with existing stickers
+        const position = getRandomPosition(existingPositions, stickerWidth, stickerHeight);
+        stickerDiv.style.left = `${position.left}px`;
+        stickerDiv.style.top = `${position.top}px`;
+
+        // Create an img element for the sticker image
+        let stickerImage = document.createElement('img');
+        stickerImage.src = sticker.imageUrl; // Use the generated image URL
+        stickerImage.alt = sticker.name;
+        stickerImage.classList.add('sticker-image');
+
+        // Set the size of the sticker image to be stamp-sized
+        stickerImage.style.width = `${stickerWidth}px`;
+        stickerImage.style.height = `${stickerHeight}px`;
+
+        // Generate a class name based on the sticker's name
+        const className = convertToClassName(sticker.name);
+        stickerImage.classList.add(className);
+
+        // Modify the CSS code to replace the class selector with the unique class name
+        const modifiedCssCode = sticker.cssCode.replace(/\.sticker/g, `.${className}`);
+
+        // Inject the modified CSS code
+        const styleElement = document.createElement('style');
+        styleElement.textContent = modifiedCssCode;
+        document.head.appendChild(styleElement);
+
+        // Append the sticker image to the stickerDiv
+        stickerDiv.appendChild(stickerImage);
+
+        // Append the stickerDiv to the body for random placement
+        document.body.appendChild(stickerDiv);
+
+        // Add the position to existingPositions for overlap checking
+        existingPositions.push(position);
+    });
+}
+
+// Helper function to generate a random position without overlapping
+function getRandomPosition(existingPositions, stickerWidth, stickerHeight) {
+    const maxAttempts = 100; // Maximum number of attempts to find a non-overlapping position
+    let attempt = 0;
+    let position;
+
+    while (attempt < maxAttempts) {
+        const maxWidth = window.innerWidth - stickerWidth;
+        const maxHeight = window.innerHeight - stickerHeight;
+        const randomX = Math.floor(Math.random() * maxWidth);
+        const randomY = Math.floor(Math.random() * maxHeight);
+        position = { left: randomX, top: randomY };
+
+        let overlap = false;
+        for (const existingPos of existingPositions) {
+            if (isOverlapping(position, existingPos, stickerWidth, stickerHeight)) {
+                overlap = true;
+                break;
+            }
+        }
+
+        if (!overlap) {
+            return position;
+        }
+
+        attempt++;
+    }
+
+    // If no non-overlapping position is found after maxAttempts, return the last position
+    return position;
+}
+
+// Helper function to check if two rectangles overlap
+function isOverlapping(pos1, pos2, width, height) {
+    return !(
+        pos1.left + width <= pos2.left ||
+        pos1.left >= pos2.left + width ||
+        pos1.top + height <= pos2.top ||
+        pos1.top >= pos2.top + height
+    );
+}
+
+// Helper function to convert sticker name to a valid CSS class name
+function convertToClassName(name) {
+    return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '');
+}
+
+
+
+    });
+</script>
+
+</body>
+</html>

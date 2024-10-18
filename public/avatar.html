@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Drag and Drop Image Upload with Feature Extraction</title>
+    <style>
+        /* Same styles as before */
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #dropArea {
+            width: 100%;
+            height: 200px;
+            border: 2px dashed #aaa;
+            border-radius: 10px;
+            text-align: center;
+            line-height: 200px;
+            font-size: 20px;
+            color: #aaa;
+            margin-bottom: 20px;
+            transition: border-color 0.3s, color 0.3s;
+        }
+        #dropArea.hover {
+            border-color: #333;
+            color: #333;
+        }
+        #gallery {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .image-container {
+            position: relative;
+            margin: 5px;
+        }
+        .image-container img {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .feature-info {
+            margin-top: 20px;
+        }
+        .feature-info p {
+            display: flex;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Drag and Drop Image Upload with Feature Extraction</h1>
+
+<div id="dropArea">Drag and drop images here</div>
+
+<div id="gallery"></div>
+
+<button id="extractFeaturesBtn">Extract Features</button>
+
+<div id="featureInfo" class="feature-info"></div>
+
+<script>
+    const dropArea = document.getElementById('dropArea');
+    const gallery = document.getElementById('gallery');
+    const extractFeaturesBtn = document.getElementById('extractFeaturesBtn');
+    const featureInfo = document.getElementById('featureInfo');
+
+    let uploadedImages = []; // Array to store image elements and data URLs
+
+    // Prevent default behaviors
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    // Highlight drop area when item is dragged over it
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropArea.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, unhighlight, false);
+    });
+
+    function highlight(e) {
+        dropArea.classList.add('hover');
+    }
+
+    function unhighlight(e) {
+        dropArea.classList.remove('hover');
+    }
+
+    // Handle dropped files
+    dropArea.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+        let dt = e.dataTransfer;
+        let files = dt.files;
+        handleFiles(files);
+    }
+
+    function handleFiles(files) {
+        files = [...files];
+        files.forEach(previewFile);
+    }
+
+    function previewFile(file) {
+        if (!file.type.startsWith('image/')) {
+            alert('Only image files are allowed!');
+            return;
+        }
+
+        let reader = new FileReader();
+        reader.readAsDataURL(file);
+
+        reader.onloadend = function() {
+            let img = document.createElement('img');
+            img.src = reader.result;
+
+            let imgContainer = document.createElement('div');
+            imgContainer.classList.add('image-container');
+            imgContainer.appendChild(img);
+
+            gallery.appendChild(imgContainer);
+
+            uploadedImages.push({
+                element: img,
+                dataURL: reader.result,
+                file: file
+            });
+        }
+    }
+
+   // In your client-side JavaScript
+async function extractFeatures() {
+  featureInfo.innerHTML = ''; // Clear previous info
+
+  for (let i = 0; i < uploadedImages.length; i++) {
+    let imgData = uploadedImages[i];
+
+    try {
+      const response = await fetch('/predict', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ imageData: imgData.dataURL })
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        let info = document.createElement('p');
+        info.textContent = `Image ${i + 1} - Caption: ${result.output}`;
+        featureInfo.appendChild(info);
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      let errorInfo = document.createElement('p');
+      errorInfo.textContent = `Image ${i + 1} - Error: ${error.message}`;
+      featureInfo.appendChild(errorInfo);
+    }
+  }
+}
+
+
+    extractFeaturesBtn.addEventListener('click', extractFeatures);
+
+</script>
+
+</body>
+</html>
