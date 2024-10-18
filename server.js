@@ -72,12 +72,12 @@ const creativeAspectRatios = ["16:9", "1:2", "4:3", "3:2"]; // Non-standard aspe
 
 // Initialize Replicate client with API key from environment variables
 const replicate = new Replicate({
-  auth: 'r8_6MSSjZGenheuUOU6NbSu9pkG8xsCRf03f8wTl',
+  auth: process.env.REPLICATE_API_KEY, // Updated to use environment variable
 });
 
 // Initialize OpenAI client
 const openai = new OpenAI({
-    apiKey: 'sk-2PflV0kN1r0VzYOdTL14GX_OjqgBMXmQ6g6z1dH12vT3BlbkFJiIJySEO_URftb62SJDrM8VpVUW3DRFM51lURIyZ90A', // Replace with your actual OpenAI API key
+    apiKey: process.env.OPENAI_API_KEY, // Updated to use environment variable
 });
 
 class ApiError extends Error {
