@@ -5,7 +5,7 @@ import Replicate from 'replicate';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import {OpenAI } from 'openai';
-
+import { surreallist_camera_angles } from './cameraangles.js'; // Import the array
 dotenv.config();
 
 const app = express();
@@ -46,6 +46,14 @@ const perspective = {
   'openjourney': 'realism, detailed anatomy, shadows, textures, colors, background elements, complex details, 3D, photorealistic',
   'Kandinsky 2': 'cropped image, partial face, side view, obscured face, close-up, extreme close-up, background elements'
   };
+
+  // const chatgpt prompt = {
+  //   'Surrealist': 'strange distortions of reality to challenge perceptions ,evoke a sense of wonder, mystery',
+  //   'Fantasy': 'twins, multiple faces, multiple figures, duplicate figures, group, crowd, side views, side profiles, overlapping figures, extra limbs, disembodied faces, reflections, mirrored images, twins, duplicates, realism, detailed anatomy, shadows, textures, colors, background elements, complex details, 3D, photorealistic',
+  //   'DreamShaper': 'complex details, realistic shading, photorealism, cluttered background',
+  //   'openjourney': 'realism, detailed anatomy, shadows, textures, colors, background elements, complex details, 3D, photorealistic',
+  //   'Kandinsky 2': 'cropped image, partial face, side view, obscured face, close-up, extreme close-up, background elements'
+  //   };
 
   const colorPallets = {
     'Surrealist': 'strange distortions of reality to challenge perceptions ,evoke a sense of wonder, mystery',
@@ -652,15 +660,20 @@ app.post('/generate-comic', async (req, res) => {
         const perspectiveformodel=perspective[selectedStyle];
         // Construct the prompt for the OpenAI API with the new constraints
         const combinedPrompt = `
-Write a creative ${selectedStyle} comic book short story about a person named userid1 based on user prompt provided.
+Transform the following journal entry into  a creative, whimsical and humourous based on 
+ ${selectedStyle} style comic book short story about a person named userid1 based on user prompt provided.
 Use narration composition style of writing.  
 Determine an appropriate number of panels based on the length and complexity of the story. 
 using as few panels as necessary (up to a maximum of 6).
 Describe othe userid1's Textures and Materials in detail based on the ${selectedStyle} style.
-Describe creatively in detail user promt's compostion like camera angles, lighting, and scene based on the ${selectedStyle} style.
-Use widely different camera angles, lighting between panels.
-use Perspective: ${perspectiveformodel}
-
+Describe creatively,whimsicaly and humourously in detail user promt's compostion like camera angles, lighting, and scene based on the ${selectedStyle} style.
+Use widely different and varied  ${selectedStyle} style suitable camera angles and lighting between panels.
+use very varied and different perspective between panels like: ${perspectiveformodel}
+use  ${selectedStyle} style color palette.
+Use different profiles between panels like  "side profile," "back view," "three-quarter view,", "from behind",  "left-facing", "right-facing", "facing away", or "turned to the side".
+Include actions like "walking away," "looking over their shoulder," or "turning to the side."
+Provide context that naturally requires a different orientation.
+Use Adjectives and Prepositions: Words like "beside," "behind," "beyond," "around".
 Output Instructions:
 
 Output ONLY the comic strip narrative as a valid JSON array, with no additional text, code blocks, explanations, or formatting before or after the JSON array. The JSON array should be the entirety of your response.
@@ -706,9 +719,16 @@ Ensure the JSON is properly formatted and valid.
  // Get the model slug from the dictionary
  const modelSlug = getModelSlug(selectedModel); 
 
+  // Pick a random camera angle from the surreallist_camera_anges array
+  const randomCameraAngle = surreallist_camera_angles[Math.floor(Math.random() * surreallist_camera_angles.length)];
+
+
  // Generate images for the comic panels
  const inputParamsArray = panelsArray.map(panel => ({
-     prompt: refinedPrompt+" create the character and background in "+selectedStyle+" comic book artistic style. " 
+     prompt: refinedPrompt+
+     ` create the character and background in ${selectedStyle} comic book artistic style.`
+
+
      +panel.description,
 
      seed: 42,
@@ -740,7 +760,7 @@ Ensure the JSON is properly formatted and valid.
 
 function parseComicAndStickers(message) {
   let content;
-
+  console.log("raw open ai "+message);
   // Check if the assistant used function calling
   if (message.function_call && message.function_call.arguments) {
       // Assistant returned the data in function_call.arguments
