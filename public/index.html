@@ -1,37 +1,169 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
     <title>Drag and Drop Image Upload with Feature Extraction</title>
     <style>
        /* Global styles and variables */
+/* Global styles and variables */
+
+
+/* Import a magical font (optional) */
+@import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
+/* Global styles and variables */
 :root {
     --primary-color: #333;
     --secondary-color: #aaa;
-    --background-color: #f9f9f9;
+    --background-color: #fdf5e6; /* Parchment color */
     --accent-color: #ff6f61;
     --font-family: 'Arial', sans-serif;
+    --magic-font: 'Lilita One', 'Comic Neue', 'Comic Sans MS', cursive;
 }
 
+/* General styles */
 body {
     font-family: var(--font-family);
     margin: 0;
     padding: 0;
-    background-color: var(--background-color);
+    background: radial-gradient(circle at center, #fdf5e6, #f5deb3, #deb887);
+    background-size: cover;
+    background-attachment: fixed;
     color: var(--primary-color);
     line-height: 1.6;
-    transition: background 0.5s; /* For background transition */
+    transition: background 0.5s, transform 0.3s;
+    position: relative; /* Required for pseudo-element positioning */
+    overflow-x: hidden; /* Prevent horizontal scrollbar during scaling */
+    animation: pageBreathing 10s infinite;
+}
+
+/* Apply breathing effect to entire page */
+@keyframes pageBreathing {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.02);
+    }
 }
 
 body.typing {
-    background-color: #fffdf5; /* Changes when typing starts */
+    background-color: #fffdf5;
 }
 
 h1 {
     text-align: center;
     margin-top: 20px;
     color: var(--primary-color);
-    font-size: 2em;
+    font-size: 2.5em;
     animation: fadeIn 1s ease-in-out;
+    font-family: var(--magic-font);
+    text-shadow: 2px 2px #ffcc00;
+}
+
+/* Journal Entry Text Area Styles */
+#journalEntry {
+    width: 100%;
+    height: 150px;
+    margin-top: 10px;
+    padding: 15px;
+    border: 2px solid #3e2723;
+    border-radius: 5px;
+    font-size: 18px;
+    resize: vertical;
+    background-color: rgba(255, 248, 220, 0.9);
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+    transition: border-color 0.3s, box-shadow 0.5s;
+    font-family: var(--magic-font);
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    color: #3e2723;
+}
+
+/* Add a magical animation to the journal background */
+#journalEntry::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at center, rgba(255, 255, 224, 0.3), transparent);
+    animation: magicAura 10s infinite;
+    z-index: -1;
+}
+
+/* Animate the borders to shimmer */
+#journalEntry::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border: 2px solid transparent;
+    border-image: linear-gradient(45deg, #ff6f61, #ffcc00, #d32f2f, #ff6f61);
+    border-image-slice: 1;
+    animation: borderShimmer 5s infinite;
+    z-index: -1;
+}
+
+#journalEntry:focus {
+    border-color: #d32f2f;
+    outline: none;
+    box-shadow: 0 0 15px rgba(211, 47, 47, 0.7);
+}
+
+#journalEntry.has-content {
+    background-color: rgba(255, 248, 220, 0.95);
+    border-color: #d32f2f;
+}
+
+/* Keyframes for magical animations */
+@keyframes magicAura {
+    0% {
+        transform: rotate(0deg);
+        opacity: 0.7;
+    }
+    50% {
+        transform: rotate(180deg);
+        opacity: 0.9;
+    }
+    100% {
+        transform: rotate(360deg);
+        opacity: 0.7;
+    }
+}
+
+@keyframes borderShimmer {
+    0% {
+        border-image: linear-gradient(45deg, #ff6f61, #ffcc00, #d32f2f, #ff6f61);
+    }
+    50% {
+        border-image: linear-gradient(45deg, #d32f2f, #ff6f61, #ffcc00, #d32f2f);
+    }
+    100% {
+        border-image: linear-gradient(45deg, #ff6f61, #ffcc00, #d32f2f, #ff6f61);
+    }
+}
+
+/* Keyframes for page breathing effect */
+@keyframes pageBreathing {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.02);
+    }
+}
+
+/* Keyframes for other animations */
+@keyframes magicMove {
+    0% { transform: scale(1) translateY(0); }
+    50% { transform: scale(1.05) translateY(-2%); }
+    100% { transform: scale(1) translateY(0); }
 }
 
 @keyframes fadeIn {
@@ -39,27 +171,88 @@ h1 {
     to { opacity: 1; }
 }
 
-#dropArea {
+/* Loading overlay styles */
+#loadingOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
-    min-height: 100px;
-    border: 2px dashed var(--secondary-color);
-    border-radius: 10px;
+    height: 100%;
+    background: rgba(255,255,224,0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    visibility: hidden;
+    flex-direction: column;
     text-align: center;
     padding: 20px;
+}
+
+#loadingOverlay.visible {
+    visibility: visible;
+}
+
+/* Magical loading text */
+#loadingOverlay::before {
+    content: 'Casting Spells...';
+    font-family: var(--magic-font);
+    font-size: 2.5em;
+    color: #d32f2f;
+    animation: magicGlow 2s infinite;
+    text-shadow: 0 0 10px #d32f2f, 0 0 20px #b71c1c, 0 0 30px #7f0000;
+}
+
+@keyframes magicGlow {
+    0%, 100% { text-shadow: 0 0 10px #d32f2f; }
+    50% { text-shadow: 0 0 20px #b71c1c, 0 0 30px #7f0000; }
+}
+
+/* Error message styles */
+.error-message {
+    color: red;
+    font-weight: bold;
+}
+
+/* Dropdown Styles */
+select {
+    padding: 5px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #3e2723;
+    background-color: rgba(255, 248, 220, 0.9);
+    transition: border-color 0.3s;
+}
+
+select:focus {
+    border-color: #d32f2f;
+    outline: none;
+}
+
+/* Buttons */
+button {
+    background-color: #d32f2f;
+    color: #fff;
+    border: none;
+    padding: 12px 24px;
     font-size: 18px;
-    color: var(--secondary-color);
-    margin-bottom: 20px;
-    transition: border-color 0.3s, color 0.3s, background-color 0.3s;
-    background-color: white;
+    border-radius: 5px;
     cursor: pointer;
+    transition: background-color 0.3s, transform 0.1s;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    font-family: var(--magic-font);
 }
 
-#dropArea:hover, #dropArea.hover {
-    border-color: var(--accent-color);
-    color: var(--accent-color);
-    background-color: #fff0f0;
+button:hover {
+    background-color: #b71c1c;
 }
 
+button:active {
+    transform: scale(0.98);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+/* Image Gallery */
 #gallery {
     display: flex;
     flex-wrap: wrap;
@@ -72,30 +265,26 @@ h1 {
     margin: 10px;
     overflow: hidden;
     border-radius: 10px;
+    border: 5px solid #3e2723;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
 }
 
 .image-container img {
     width: 150px;
     height: 150px;
     object-fit: cover;
-    transition: transform 0.3s;
+    transition: transform 1s, filter 1s;
+    animation: magicMove 10s infinite alternate ease-in-out;
+    filter: brightness(0.9);
 }
 
 .image-container:hover img {
     transform: scale(1.1);
+    filter: brightness(1);
+    animation-play-state: paused;
 }
 
-.feature-info {
-    margin-top: 20px;
-    padding: 10px;
-}
-
-.feature-info p {
-    display: flex;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
+/* Generated Images */
 #generatedImages {
     display: flex;
     flex-wrap: wrap;
@@ -106,132 +295,26 @@ h1 {
 .generated-image-container {
     margin: 10px;
     text-align: center;
+    overflow: hidden;
+    border-radius: 10px;
+    border: 5px solid #3e2723;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
 }
 
 .generated-image-container img {
     width: 100%;
     max-width: 300px;
     height: auto;
-    object-fit: contain;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    transition: transform 0.3s;
+    object-fit: cover;
+    transition: transform 1s, filter 1s;
+    animation: magicMove 12s infinite alternate ease-in-out;
+    filter: brightness(0.9);
 }
 
 .generated-image-container:hover img {
     transform: scale(1.05);
-}
-
-.model-name {
-    margin-top: 5px;
-    font-weight: bold;
-}
-
-/* Loading overlay styles */
-#loadingOverlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(255,255,255,0.8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    visibility: hidden;
-}
-
-#loadingOverlay.visible {
-    visibility: visible;
-}
-
-.spinner {
-    border: 8px solid #f3f3f3;
-    border-top: 8px solid var(--accent-color);
-    border-radius: 50%;
-    width: 60px;
-    height: 60px;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
-
-/* Error message styles */
-.error-message {
-    color: red;
-    font-weight: bold;
-}
-
-/* Journal Entry Text Area Styles */
-#journalEntry {
-    width: 100%;
-    height: 100px;
-    margin-top: 10px;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 16px;
-    resize: vertical;
-    transition: border-color 0.3s, box-shadow 0.3s, background-color 0.5s;
-    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
-}
-
-#journalEntry:focus {
-    border-color: var(--accent-color);
-    box-shadow: 0 0 5px rgba(255, 111, 97, 0.5);
-    outline: none;
-}
-
-#journalEntry.has-content {
-    background-color: #fffbe6; /* Changes when user starts typing */
-    border-color: var(--accent-color);
-}
-
-#charCount {
-    text-align: right;
-    font-size: 14px;
-    color: #666;
-    margin-top: 5px;
-}
-
-/* Dropdown Styles */
-select {
-    padding: 5px;
-    font-size: 16px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    transition: border-color 0.3s;
-}
-
-select:focus {
-    border-color: var(--accent-color);
-    outline: none;
-}
-
-/* Buttons */
-button {
-    background-color: var(--accent-color);
-    color: #fff;
-    border: none;
-    padding: 10px 20px;
-    font-size: 16px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s, transform 0.1s;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-button:hover {
-    background-color: #ff8a75;
-}
-
-button:active {
-    transform: scale(0.98);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    filter: brightness(1);
+    animation-play-state: paused;
 }
 
 /* Stickers Section Styles */
@@ -242,13 +325,18 @@ button:active {
 .sticker-container {
     position: absolute;
     z-index: 1000;
-    animation: float 6s ease-in-out infinite;
+    animation: float 6s ease-in-out infinite, sway 3s infinite alternate ease-in-out;
 }
 
 @keyframes float {
     0% { transform: translateY(0); }
     50% { transform: translateY(-20px); }
     100% { transform: translateY(0); }
+}
+
+@keyframes sway {
+    from { transform: rotate(-2deg); }
+    to { transform: rotate(2deg); }
 }
 
 .sticker-image {
@@ -266,11 +354,11 @@ button:active {
         max-width: 200px;
     }
     #journalEntry {
-        font-size: 14px;
+        font-size: 16px;
     }
     button {
-        font-size: 14px;
-        padding: 8px 16px;
+        font-size: 16px;
+        padding: 10px 20px;
     }
 }
 
@@ -282,6 +370,7 @@ label {
 div {
     padding: 0 20px;
 }
+
 
     </style>
 </head>
@@ -300,6 +389,9 @@ div {
     <label for="journalEntry">Journal Entry:</label>
     <textarea id="journalEntry" value="I feel grateful for" rows="4" cols="50" placeholder="Write your journal entry here..."></textarea>
 </div>
+
+<!-- Character Count Display -->
+<div id="charCount">0 characters</div>
 
 <!-- Create Comic Button and Dropdown for Model Selection -->
 <div style="display: flex; align-items: center; margin-top: 10px;">
@@ -328,7 +420,7 @@ div {
 
 <!-- Loading overlay -->
 <div id="loadingOverlay">
-    <div class="spinner"></div>
+    
 </div>
 
 <div id="featureInfo"></div>
@@ -362,6 +454,20 @@ document.getElementById('journalEntry').addEventListener('input', function() {
         this.classList.remove('has-content');
     }
 });
+
+// Remove the pressed effect event listeners
+const journalEntry = document.getElementById('journalEntry');
+
+// Remove these event listeners as they're no longer needed
+/*
+journalEntry.addEventListener('focus', function() {
+    document.body.classList.add('pressed');
+});
+
+journalEntry.addEventListener('blur', function() {
+    document.body.classList.remove('pressed');
+});
+*/
 
 
 
