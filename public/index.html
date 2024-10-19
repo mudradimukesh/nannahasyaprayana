@@ -3,138 +3,286 @@
 <head>
     <title>Drag and Drop Image Upload with Feature Extraction</title>
     <style>
-        /* Same styles as before */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        #dropArea {
-            width: 100%;
-            height: 50px; /* Reduced height to half */
-            border: 2px dashed #aaa;
-            border-radius: 10px;
-            text-align: center;
-            line-height: 50px; /* Adjusted line height to match the new height */
-            font-size: 16px; /* Optionally reduce font size */
-            color: #aaa;
-            margin-bottom: 20px;
-            transition: border-color 0.3s, color 0.3s;
-        }
-        #dropArea.hover {
-            border-color: #333;
-            color: #333;
-        }
-        #gallery {
-            display: flex;
-            flex-wrap: wrap;
-        }
-        .image-container {
-            position: relative;
-            margin: 5px;
-        }
-        .image-container img {
-            width: 150px;
-            height: 150px;
-            object-fit: cover;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        .feature-info {
-            margin-top: 20px;
-        }
-        .feature-info p {
-            display: flex;
-            align-items: center;
-        }
-        /* New styles for generated images grid */
-        #generatedImages {
-            display: flex;
-            flex-wrap: wrap;
-            margin-top: 20px;
-        }
-        .generated-image-container {
-            margin: 10px;
-            text-align: center;
-        }
-        .generated-image-container img {
-            width: 200px;
-            height: 200px;
-            object-fit: contain;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        .model-name {
-            margin-top: 5px;
-            font-weight: bold;
-        }
-        /* Loading overlay styles */
-        #loadingOverlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255,255,255,0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            visibility: hidden;
-        }
-        #loadingOverlay.visible {
-            visibility: visible;
-        }
-        .spinner {
-            border: 8px solid #f3f3f3;
-            border-top: 8px solid #333;
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            animation: spin 1s linear infinite;
-        }
-  
-        /* Error message styles */
-        .error-message {
-            color: red;
-        }
-        /* Journal Entry Text Area Styles */
-        #journalEntry {
-            width: 100%; /* Full width */
-            height: 100px; /* Height of the text area */
-            margin-top: 10px; /* Space above the text area */
-            padding: 10px; /* Padding inside the text area */
-            border: 1px solid #ccc; /* Border style */
-            border-radius: 5px; /* Rounded corners */
-            font-size: 16px; /* Font size */
-            resize: vertical; /* Allow vertical resizing */
-        }
-        /* Dropdown for Model Selection */
-        #modelSelect {
-            margin-left: 5px; /* Space between the dropdown and the button */
-            padding: 5px; /* Padding inside the dropdown */
-            font-size: 16px; /* Font size */
-        }
-        /* Stickers Section Styles */
-        #stickersSection {
-            margin-top: 20px;
-        }
-        .sticker-container {
-            display: inline-block;
-            margin: 10px;
-            text-align: center;
-        }
-        .sticker {
-            width: 100px;
-            height: 100px;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-        }
-        /* Basic styles for visibility */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
+       /* Global styles and variables */
+:root {
+    --primary-color: #333;
+    --secondary-color: #aaa;
+    --background-color: #f9f9f9;
+    --accent-color: #ff6f61;
+    --font-family: 'Arial', sans-serif;
+}
+
+body {
+    font-family: var(--font-family);
+    margin: 0;
+    padding: 0;
+    background-color: var(--background-color);
+    color: var(--primary-color);
+    line-height: 1.6;
+    transition: background 0.5s; /* For background transition */
+}
+
+body.typing {
+    background-color: #fffdf5; /* Changes when typing starts */
+}
+
+h1 {
+    text-align: center;
+    margin-top: 20px;
+    color: var(--primary-color);
+    font-size: 2em;
+    animation: fadeIn 1s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+#dropArea {
+    width: 100%;
+    min-height: 100px;
+    border: 2px dashed var(--secondary-color);
+    border-radius: 10px;
+    text-align: center;
+    padding: 20px;
+    font-size: 18px;
+    color: var(--secondary-color);
+    margin-bottom: 20px;
+    transition: border-color 0.3s, color 0.3s, background-color 0.3s;
+    background-color: white;
+    cursor: pointer;
+}
+
+#dropArea:hover, #dropArea.hover {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+    background-color: #fff0f0;
+}
+
+#gallery {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.image-container {
+    position: relative;
+    margin: 10px;
+    overflow: hidden;
+    border-radius: 10px;
+}
+
+.image-container img {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    transition: transform 0.3s;
+}
+
+.image-container:hover img {
+    transform: scale(1.1);
+}
+
+.feature-info {
+    margin-top: 20px;
+    padding: 10px;
+}
+
+.feature-info p {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+#generatedImages {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.generated-image-container {
+    margin: 10px;
+    text-align: center;
+}
+
+.generated-image-container img {
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+    object-fit: contain;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    transition: transform 0.3s;
+}
+
+.generated-image-container:hover img {
+    transform: scale(1.05);
+}
+
+.model-name {
+    margin-top: 5px;
+    font-weight: bold;
+}
+
+/* Loading overlay styles */
+#loadingOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255,255,255,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    visibility: hidden;
+}
+
+#loadingOverlay.visible {
+    visibility: visible;
+}
+
+.spinner {
+    border: 8px solid #f3f3f3;
+    border-top: 8px solid var(--accent-color);
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Error message styles */
+.error-message {
+    color: red;
+    font-weight: bold;
+}
+
+/* Journal Entry Text Area Styles */
+#journalEntry {
+    width: 100%;
+    height: 100px;
+    margin-top: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    resize: vertical;
+    transition: border-color 0.3s, box-shadow 0.3s, background-color 0.5s;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+}
+
+#journalEntry:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 5px rgba(255, 111, 97, 0.5);
+    outline: none;
+}
+
+#journalEntry.has-content {
+    background-color: #fffbe6; /* Changes when user starts typing */
+    border-color: var(--accent-color);
+}
+
+#charCount {
+    text-align: right;
+    font-size: 14px;
+    color: #666;
+    margin-top: 5px;
+}
+
+/* Dropdown Styles */
+select {
+    padding: 5px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    transition: border-color 0.3s;
+}
+
+select:focus {
+    border-color: var(--accent-color);
+    outline: none;
+}
+
+/* Buttons */
+button {
+    background-color: var(--accent-color);
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.1s;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+button:hover {
+    background-color: #ff8a75;
+}
+
+button:active {
+    transform: scale(0.98);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+/* Stickers Section Styles */
+#stickersSection {
+    margin-top: 20px;
+}
+
+.sticker-container {
+    position: absolute;
+    z-index: 1000;
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+    100% { transform: translateY(0); }
+}
+
+.sticker-image {
+    width: 50px;
+    height: 50px;
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+    .image-container img {
+        width: 100px;
+        height: 100px;
+    }
+    .generated-image-container img {
+        max-width: 200px;
+    }
+    #journalEntry {
+        font-size: 14px;
+    }
+    button {
+        font-size: 14px;
+        padding: 8px 16px;
+    }
+}
+
+/* Additional Styles */
+label {
+    font-weight: bold;
+}
+
+div {
+    padding: 0 20px;
+}
+
     </style>
 </head>
 <body>
@@ -201,6 +349,23 @@
 </div>
 
 <script>
+
+document.getElementById('journalEntry').addEventListener('input', function() {
+    const charCount = this.value.length;
+    document.getElementById('charCount').textContent = charCount + ' characters';
+
+    if (charCount > 0) {
+        document.body.classList.add('typing');
+        this.classList.add('has-content');
+    } else {
+        document.body.classList.remove('typing');
+        this.classList.remove('has-content');
+    }
+});
+
+
+
+
     document.addEventListener('DOMContentLoaded', () => {
         const dropArea = document.getElementById('dropArea');
         const gallery = document.getElementById('gallery');
